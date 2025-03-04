@@ -8,6 +8,8 @@ services:
       - "4000:4000"
     depends_on:
       - db
+      - migrate
+      - seed
     env_file:
       - .env
     environment:
@@ -16,6 +18,28 @@ services:
       - .:/app
       - /app/node_modules
     restart: always
+
+  migrate:
+    build: .
+    container_name: betting_migrations
+    depends_on:
+      - db
+    env_file:
+      - .env
+    command: npx prisma migrate deploy
+    volumes:
+      - .:/app
+
+  seed:
+    build: .
+    container_name: betting_seed
+    depends_on:
+      - migrate
+    env_file:
+      - .env
+    command: npx ts-node ./prisma/seed.ts
+    volumes:
+      - .:/app
 
   db:
     image: postgres:15
