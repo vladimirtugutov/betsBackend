@@ -18,12 +18,13 @@ model User {
   transactions Transaction[]
   apiLogs    ApiLog[]
   userBalance UserBalance?
+  externalApiAccount ExternalApiAccount?
 }
 
 model Bet {
   id           Int      @id @default(autoincrement())
   userId       Int
-  externalBetId String
+  externalBetId Int
   amount       Decimal
   status       String
   winAmount    Decimal
@@ -69,4 +70,15 @@ model UserBalance {
   externalBalance Decimal
   lastCheckedAt   DateTime @default(now())
   user            User     @relation(fields: [userId], references: [id])
+}
+
+model ExternalApiAccount {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  externalId String?  // ID пользователя во внешнем API (если требуется)
+  secretKey  String   // Секретный ключ для интеграции с API ставок
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @updatedAt @db.Timestamp(6)  
+  user       User     @relation(fields: [userId], references: [id])
 }
