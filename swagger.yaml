@@ -1,0 +1,224 @@
+openapi: 3.0.3
+info:
+  title: Betting Integration Service API
+  version: "1.0.0"
+  description: >
+    API-сервис для интеграции с платформой ставок.
+    Сервис выступает промежуточным слоем между клиентскими приложениями и внешним Betting Provider API.
+servers:
+  - url: http://localhost:4000/api
+    description: Local development server
+paths:
+  /auth/login:
+    post:
+      summary: Аутентификация пользователя, получение JWT-токена
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+              example:
+                username: "user1"
+      responses:
+        "200":
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  expiresIn:
+                    type: integer
+                example:
+                  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  expiresIn: 3600
+        "404":
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  statusCode: 404
+                  error: "Not Found"
+                  message: "User not found"
+
+  /bets:
+    post:
+      summary: Размещение новой ставки
+      tags:
+        - Bets
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+              example:
+                amount: 3
+      responses:
+        "201":
+          description: Ставка успешно размещена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bet"
+        "400":
+          description: Ошибка валидации или недостаточно средств
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: "Invalid bet amount. Must be between 1 and 5."
+    get:
+      summary: Получение истории ставок пользователя (с актуализацией через внешний API)
+      tags:
+        - Bets
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Список ставок пользователя с пагинацией
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Bet"
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      pages:
+                        type: integer
+                example:
+                  bets:
+                    - id: "123"
+                      amount: 3
+                      status: "completed"
+                      win_amount: 6
+                      created_at: "2023-06-15T10:30:00Z"
+                      completed_at: "2023-06-15T10:31:00Z"
+                    - id: "124"
+                      amount: 2
+                      status: "pending"
+                      created_at: "2023-06-15T11:30:00Z"
+                  pagination:
+                    total: 15
+                    page: 1
+                    limit: 10
+                    pages: 2
+  /bets/recommended:
+    get:
+      summary: Получение рекомендуемой ставки
+      tags:
+        - Bets
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Рекомендуемая ставка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommended_amount:
+                    type: number
+                example:
+                  recommended_amount: 3
+  /bets/{id}:
+    get:
+      summary: Получение информации о конкретной ставке
+      tags:
+        - Bets
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Локальный идентификатор ставки
+      responses:
+        "200":
+          description: Информация о ставке
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bet"
+        "404":
+          description: Ставка не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  statusCode: 404
+                  error: "Not Found"
+                  message: "Bet not found"
+
+  /balance:
+    post:
+      summary: Получение обновленного баланса пользователя
+      tags:
+        - Balance
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Тело запроса пустое
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              example: {}
+      responses:
+        "200":
+          description: Текущий баланс пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance: type
