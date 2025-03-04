@@ -1,6 +1,7 @@
 import { callExternalAPI } from '../apiClients/externalApiClient';
 import { betRepository } from '../repositories/betRepository';
 import { balanceRepository } from '../repositories/balanceRepository';
+import { balanceService } from '../services/balanceService';
 import { prisma } from '../database/prismaClient';
 
 export const betService = {
@@ -86,10 +87,12 @@ export const betService = {
     // Обновляем локальную запись
     const updatedBet = await betRepository.updateBet(userId, bet.id, updatedData);
 
-    // Обновляем баланс пользователя:
-    // Если выигрыш (win > 0), баланс увеличивается на win,
-    // если проигрыш (win === 0), баланс уменьшается на сумму ставки.
+   // Обновляем баланс пользователя и записываем транзакцию в таблицу Transaction
     await balanceRepository.updateBalanceByBetResult(userId, bet.id, bet.amount, win);
+
+    // Проверяем локальный баланс через наш метод checkBalance, который сравнивает его с данными внешнего API
+    // (Метод checkBalance сам обновит локальный баланс, если обнаружит несоответствие.)
+    await balanceService.checkBalance(userId);
 
     return updatedBet;
   },
