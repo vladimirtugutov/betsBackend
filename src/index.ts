@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction, RequestHandler } from 'express';
 import dotenv from 'dotenv';
-import internalRoutes from './internalRoutes';
+import internalRoutes from './routes/internalRoutes';
 import betRoutes from './routes/betRoutes';
 import balanceRoutes from './routes/balanceRoutes';
 import checkBalanceRoutes from './routes/checkBalanceRoutes';

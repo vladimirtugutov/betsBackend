@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import axios from 'axios';
-import { createSignature } from './utils/signature';
+import { createSignature } from '../utils/signature';
 
 const router = Router();
 
