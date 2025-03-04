@@ -28,5 +28,31 @@ export const balanceService = {
       last_updated: lastCheckedAt.toISOString(),
     };
   },
+
+  async checkBalance(userId: number) {
+    // Получаем локальный баланс через репозиторий, а не напрямую через prisma
+    const localBalanceRecord = await balanceRepository.getUserBalance(userId);
+    if (!localBalanceRecord) {
+      throw new Error("Local balance not found");
+    }
+    
+    // Если используется Decimal, преобразуем к числу (если требуется)
+    const expected_balance = Number(localBalanceRecord.balance);
+    const requestBody = { expected_balance };
+    
+    const externalResponse = await callExternalAPI('post', '/check-balance', userId, requestBody);
+    const result = externalResponse.data;
+    
+    if (result.is_correct === false) {
+      const lastCheckedAt = new Date();
+      await balanceRepository.upsertUserBalance(
+        userId,
+        result.correct_balance,
+        result.correct_balance,
+        lastCheckedAt
+      );
+    }
+    return result;
+  },
 };
 

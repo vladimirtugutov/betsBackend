@@ -1,16 +1,19 @@
-import { callExternalAPI } from './externalApiClient';
+import axios from 'axios';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 export async function checkExternalHealth(): Promise<string> {
   try {
-    // Используем userId из переменной окружения для проверки (если требуется)
-    const userId = parseInt(process.env.EXTERNAL_API_USER_ID || "0", 10);
-    // Тело запроса пустое для health check
-    const requestBody = {};
-    // Вызываем внешний API по эндпоинту /health с методом GET
-    const externalResponse = await callExternalAPI('get', '/health', userId, requestBody);
+    // Запрос к эндпоинту /api/health без специальных заголовков
+    const url = `${process.env.EXTERNAL_API}/health`;
+    const externalResponse = await axios.get(url, {
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    // console.log('externalResponse', externalResponse?.data);
+    
     return externalResponse.status === 200 ? 'ok' : 'error';
   } catch (error: any) {
     console.error("External API health check failed:", error.message);

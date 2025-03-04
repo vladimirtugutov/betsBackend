@@ -3,7 +3,7 @@ import { prisma } from '../database/prismaClient';
 
 export const healthService = {
   async getHealthStatus() {
-    // Локальная проверка базы: пример проверки — попробуем выполнить запрос
+    // Проверяем состояние базы данных через простой запрос
     let databaseStatus = 'ok';
     try {
       await prisma.$queryRaw`SELECT 1`;
@@ -12,7 +12,7 @@ export const healthService = {
       databaseStatus = 'error';
     }
     
-    // Проверка внешнего API
+    // Проверяем состояние внешнего API
     const externalStatus = await checkExternalHealth();
     
     // Формируем итоговый объект состояния

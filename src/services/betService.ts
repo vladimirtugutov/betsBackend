@@ -118,5 +118,46 @@ export const betService = {
     return await betRepository.findBetsByUser(userId);
   },
 
+  async getUpdatedBalance(userId: number) {
+    // Формируем запрос к внешнему API: POST /balance с пустым телом
+    const requestBody = {};
+    const externalResponse = await callExternalAPI('post', '/balance', userId, requestBody);
+    
+    // Предположим, внешний API возвращает объект вида:
+    // { balance: 1150, last_updated: "2025-03-04T12:49:04.697Z" }
+    const externalData = externalResponse.data;
+    // Преобразуем last_updated в объект Date
+    let lastCheckedAt = new Date(externalData.last_updated);
+    if (isNaN(lastCheckedAt.getTime())) {
+      lastCheckedAt = new Date();
+    }
+    
+    // Обновляем или создаем запись в локальной базе данных
+    await balanceRepository.upsertUserBalance(
+      userId,
+      externalData.balance,
+      externalData.balance,
+      lastCheckedAt
+    );
+    
+    return {
+      balance: externalData.balance,
+      last_updated: lastCheckedAt.toISOString(),
+    };
+  },
+
+  async checkBalance(userId: number, expected_balance: number) {
+    // Формируем тело запроса для проверки баланса
+    const requestBody = { expected_balance };
+    const externalResponse = await callExternalAPI('post', '/check-balance', userId, requestBody);
+    
+    // Предположим, внешний API возвращает:
+    // Для корректного баланса:
+    // { is_correct: true, balance: 1150 }
+    // Для некорректного:
+    // { is_correct: false, message: "Incorrect balance. Expected: 1010, Actual: 1006", correct_balance: 1006 }
+    return externalResponse.data;
+  },
+
 };
 

@@ -69,4 +69,10 @@ export const balanceRepository = {
 
     return updatedBalance;
   },
+
+  async getUserBalance(userId: number) {
+    return prisma.userBalance.findUnique({
+      where: { userId },
+    });
+  },
 };
