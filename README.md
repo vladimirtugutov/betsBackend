@@ -58,6 +58,7 @@ akBackend.postman_collection.json
 С его помощью можно протестировать работоспособность приложения в Postman.
 
 Команды для запуска тестов:
+
 установка зависимостей
 ```sh
 yarn install
@@ -69,5 +70,5 @@ yarn jest
 ```
 очистить кэш тестов
 ```sh
-yarn jest --clearCashe
+yarn jest --clearCache
 ```
