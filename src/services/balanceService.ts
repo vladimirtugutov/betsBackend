@@ -1,5 +1,6 @@
 import { callExternalAPI } from '../apiClients/externalApiClient';
 import { balanceRepository } from '../repositories/balanceRepository';
+import { userRepository } from '../repositories/userRepository';
 
 export const balanceService = {
   async getBalance(userId: number) {
@@ -54,5 +55,15 @@ export const balanceService = {
     }
     return result;
   },
-};
 
+  async syncAllUserBalances() {
+    // Получаем всех пользователей через репозиторий
+    const users = await userRepository.findUsersWithExternalAccount();
+    const syncResults = await Promise.all(
+      users.map(user =>
+        this.getBalance(user.id).catch(err => ({ userId: user.id, error: err.message }))
+      )
+    );
+    return syncResults;
+  },
+};

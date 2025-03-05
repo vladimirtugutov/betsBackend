@@ -16,7 +16,7 @@ jest.mock('../src/utils/signature', () => ({
 }));
 
 import axios from 'axios';
-import { callExternalAPI } from '../src/apiClients/externalApiClient';
+import { callExternalAPI, resetCircuitBreaker } from '../src/apiClients/externalApiClient';
 import { prisma } from '../src/database/prismaClient';
 import { apiLogRepository } from '../src/repositories/apiLogRepository';
 import * as signatureUtils from '../src/utils/signature';
@@ -26,6 +26,7 @@ describe('callExternalAPI', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    resetCircuitBreaker();
     process.env = { ...originalEnv, EXTERNAL_API: 'https://example.com' };
   });
 

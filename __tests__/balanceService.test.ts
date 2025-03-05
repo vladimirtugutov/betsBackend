@@ -1,11 +1,13 @@
 import { balanceService } from '../src/services/balanceService';
 import { callExternalAPI } from '../src/apiClients/externalApiClient';
 import { balanceRepository } from '../src/repositories/balanceRepository';
+import { userRepository } from '../src/repositories/userRepository';
 import { prisma } from '../src/database/prismaClient';
 
 jest.mock('../src/apiClients/externalApiClient');
 jest.mock('../src/repositories/balanceRepository');
 jest.mock('../src/database/prismaClient');
+jest.mock('../src/repositories/userRepository');
 
 jest.mock('../src/database/prismaClient', () => ({
   prisma: {
@@ -93,5 +95,41 @@ describe('balanceService.checkBalance - additional branches', () => {
     expect(result.is_correct).toBe(true);
     // Если баланс корректен, upsertUserBalance не должен вызываться
     expect(upsertSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('balanceService.syncAllUserBalances', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should return sync results for all users', async () => {
+    // Мокаем репозиторий для получения пользователей с внешней учетной записью
+    const users = [
+      { id: 1 },
+      { id: 2 },
+      { id: 3 },
+    ];
+    (userRepository.findUsersWithExternalAccount as jest.Mock).mockResolvedValue(users);
+
+    // Мокаем метод getBalance для каждого пользователя:
+    // для userId = 2 имитируем ошибку, для остальных – возвращаем корректное значение
+    jest.spyOn(balanceService, 'getBalance').mockImplementation((userId: number) => {
+      if (userId === 2) {
+        return Promise.reject(new Error('Test error'));
+      }
+      return Promise.resolve({ balance: 1000 + userId, last_updated: new Date().toISOString() });
+    });
+
+    const syncResults = await balanceService.syncAllUserBalances();
+
+    // Проверяем, что получен массив длины 3
+    expect(syncResults).toHaveLength(3);
+    // Для userId = 1 ожидаем корректный результат
+    expect(syncResults[0]).toEqual(expect.objectContaining({ balance: 1001 }));
+    // Для userId = 2 ожидаем объект с ошибкой
+    expect(syncResults[1]).toEqual({ userId: 2, error: 'Test error' });
+    // Для userId = 3 ожидаем корректный результат
+    expect(syncResults[2]).toEqual(expect.objectContaining({ balance: 1003 }));
   });
 });

@@ -13,4 +13,11 @@ export const userRepository = {
       data: { lastLogin: new Date() },
     });
   },
+
+  async findUsersWithExternalAccount() {
+    return prisma.user.findMany({
+      where: { externalApiAccount: { isNot: null } },
+      select: { id: true },
+    });
+  },
 };
