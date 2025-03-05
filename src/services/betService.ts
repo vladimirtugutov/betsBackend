@@ -34,7 +34,8 @@ export const betService = {
 
     // Сразу вызываем refreshBet, чтобы получить актуальные данные (результат ставки) 
     // и обновить локальную запись и баланс
-    await this.refreshBet(userId, newBet);
+    await betService.refreshBet(userId, newBet);
+    
 
     return newBet;
   },

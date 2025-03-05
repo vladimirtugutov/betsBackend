@@ -57,3 +57,41 @@ describe('balanceService.checkBalance', () => {
     expect(result.is_correct).toBe(false);
   });
 });
+
+describe('balanceService.getBalance - additional branch', () => {
+  it('should fallback to current date if externalData.last_updated is invalid', async () => {
+    const externalData = { balance: 1200, last_updated: "invalid-date" };
+    (callExternalAPI as jest.Mock).mockResolvedValue({ data: externalData, status: 200 });
+    (balanceRepository.upsertUserBalance as jest.Mock).mockResolvedValue(externalData);
+    
+    const result = await balanceService.getBalance(1);
+    expect(result.balance).toBe(1200);
+    // Проверяем, что last_updated возвращается в корректном формате ISO,
+    // т.е. new Date(result.last_updated) не является "Invalid Date"
+    expect(new Date(result.last_updated).toString()).not.toBe("Invalid Date");
+  });
+});
+
+describe('balanceService.checkBalance - additional branches', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+  });
+  it('should throw error if local balance not found', async () => {
+    (balanceRepository.getUserBalance as jest.Mock).mockResolvedValue(null);
+    await expect(balanceService.checkBalance(1)).rejects.toThrow("Local balance not found");
+  });
+
+  it('should not update local balance if external API returns is_correct true', async () => {
+    const localBalance = { balance: 1050 };
+    (balanceRepository.getUserBalance as jest.Mock).mockResolvedValue(localBalance);
+    const externalData = { is_correct: true, balance: 1050 };
+    (callExternalAPI as jest.Mock).mockResolvedValue({ data: externalData });
+    const upsertSpy = jest.spyOn(balanceRepository, 'upsertUserBalance');
+
+    const result = await balanceService.checkBalance(1);
+    expect(result.is_correct).toBe(true);
+    // Если баланс корректен, upsertUserBalance не должен вызываться
+    expect(upsertSpy).not.toHaveBeenCalled();
+  });
+});
