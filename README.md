@@ -56,3 +56,18 @@ docker logs betting_api
 В корне проекта находится файл:
 akBackend.postman_collection.json
 С его помощью можно протестировать работоспособность приложения в Postman.
+
+Команды для запуска тестов:
+установка зависимостей
+```sh
+yarn install
+```
+
+запуск jest
+```sh
+yarn jest
+```
+очистить кэш тестов
+```sh
+yarn jest --clearCashe
+```
