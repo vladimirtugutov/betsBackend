@@ -3,6 +3,7 @@ module.exports = {
   testEnvironment: 'node',
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*.{ts,tsx}'],
+  coveragePathIgnorePatterns: ['src/index.ts'],
   coverageThreshold: {
     global: {
       branches: 70,

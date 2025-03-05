@@ -1,6 +1,5 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { createSignature } from '../utils/signature';
 import { apiLogRepository } from '../repositories/apiLogRepository';
 
 dotenv.config();
